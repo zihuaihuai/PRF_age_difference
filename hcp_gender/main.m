@@ -13,6 +13,7 @@ parfor i = 1:length(data)
     out_all(i).para = curve_feature;
     out_all(i).curve_c = CRF;
     out_all(i).curve_r = RRF;
+    i
 end
 toc
 check = zeros(length(data),1);
@@ -26,7 +27,7 @@ out_all(find(check)) = [];
 data(find(check)) = [];
 
 
-save('result/result.mat', 'out_all');
+save('result/result.mat', 'out_all','check');
 out_m = out_all(find([data.gender]==0));
 out_f = out_all(find([data.gender]==1));
 %% plot the crf and rrf with error bar
@@ -37,6 +38,7 @@ r_f = reshape([out_f.curve_r],[],size(out_f,2))';
 load curve_stand.mat;
 
 set(gcf,'Position',get(0,'ScreenSize'));
+figure
 ax1 = subplot(2,1,1);
 c_y_mean = mean(c_m);
 c_y_std = std(c_m)/sqrt(size(r_m,1));
@@ -45,9 +47,9 @@ c_o_mean = mean(c_f);
 c_o_std = std(c_f)/sqrt(size(r_f,1));
 shadedErrorBar(0:0.1:60,c_o_mean,c_o_std);hold on
 shadedErrorBar(0:0.1:60,CRF_stan,zeros(601,1),'lineprops','r'); 
-legend('young', 'old', 'standard');
+legend('male', 'female', 'standard');
 title('cardiac response function for all');
-hold off
+
 
 ax2 = subplot(2,1,2);
 r_y_mean = mean(r_m);
@@ -57,93 +59,127 @@ r_o_mean = mean(r_f);
 r_o_std = std(r_f)/sqrt(size(r_f,1));
 shadedErrorBar(0:0.1:60,r_o_mean,r_o_std); hold on
 shadedErrorBar(0:0.1:60,RRF_stan,zeros(601,1),'lineprops','r');
-legend('young', 'old', 'standard');
+legend('male', 'female', 'standard');
 title('respiration response function for all');
-hold off
-saveas(gcf,'jpgs/MeanShadedErr.jpg')
+
+saveas(gcf,'fig/MeanShadedErr.jpg')
 clear gcf
-
-c_m_all = c_m;
-r_m_all = r_m;
-c_f_all = c_f;
-r_f_all = r_f;
-% the plots for 3 sessons separately
-set(gcf,'Position',get(0,'ScreenSize'));
-
-for i = 1: num_sessions
-    s = (i-1) * 12 + 1;
-    e = 12 * i;
-    c_m = c_m_all(s:e,:);
-    r_m = r_m_all(s:e,:);
-    s = (i - 1) * 9 + 1;
-    e = 9 * i;
-    c_f = c_f_all(s:e,:);
-    r_f = r_f_all(s:e,:);
-    ax1 = subplot(num_sessions,2,2*i-1);
-    c_y_mean = mean(c_m);
-    c_y_std = std(c_m)/sqrt(size(r_m,1));
-    shadedErrorBar(0:0.1:60,c_y_mean,c_y_std, 'lineprops','b');hold on 
-    c_o_mean = mean(c_f);
-    c_o_std = std(c_f)/sqrt(size(r_f,1));
-    shadedErrorBar(0:0.1:60,c_o_mean,c_o_std);hold on
-    shadedErrorBar(0:0.1:60,CRF_stan,zeros(601,1),'lineprops','r'); 
-    legend('young', 'old', 'standard');
-    title(['cardiac response function',sess_names(i)]);
-
-    ax2 = subplot(3,2,2*i);
-    r_y_mean = mean(r_m);
-    r_y_std = std(r_m)/sqrt(size(r_m,1));
-    shadedErrorBar(0:0.1:60,r_y_mean,r_y_std,'lineprops','b');hold on 
-    r_o_mean = mean(r_f);
-    r_o_std = std(r_f)/sqrt(size(r_f,1));
-    shadedErrorBar(0:0.1:60,r_o_mean,r_o_std); hold on
-    shadedErrorBar(0:0.1:60,RRF_stan,zeros(601,1),'lineprops','r');
-    legend('young', 'old', 'standard');
-    title(['respiration response function',sess_names(i)]); 
-
-end
-saveas(gcf,'jpgs/ShadedError.jpg');
-clear gcf
-set(gcf,'Position',get(0,'ScreenSize'));
-for i = 1:num_sessions
-    s = (i-1) * 12 + 1;
-    e = 12 * i;
-    c_m = c_m_all(s:e,:);
-    r_m = r_m_all(s:e,:);
-    s = (i - 1) * 9 + 1;
-    e = 9 * i;
-    c_f = c_f_all(s:e,:);
-    r_f = r_f_all(s:e,:);    
-    ax1 = subplot(3,4,4*i-3)    
-    for j = 1:12
-        plot(c_m(j,:));hold on;
-    end
-    plot(CRF_stan,'LineWidth',1.5,'Color','k');
-    title([sess_names(i),'CRF in young group'])
-
-    ax2 = subplot(3,4,4*i-2)    
-    for j = 1:12
-        plot(r_m(j,:));hold on;
-    end
-    plot(RRF_stan,'LineWidth',1.5,'Color','k');
-    title([sess_names(i),' RRF in young group'])
-
-
-    ax3 = subplot(3,4,4*i-1)    
-    for j = 1:9
-        plot(c_f(j,:));hold on;
-    end
-    plot(CRF_stan,'LineWidth',1.5,'Color','k');
-    title([sess_names(i),'CRF in old group'])
-
-    ax4 = subplot(3,4,4*i)    
-    for j = 1:9
-        plot(r_f(j,:));hold on;
-    end
-    plot(RRF_stan,'LineWidth',1.5,'Color','k');
-    title([sess_names(i),'RRF in old group'])
-end
-saveas(gcf,'jpgs/AllLine.jpg')
+% 
+% c_m_all = c_m;
+% r_m_all = r_m;
+% c_f_all = c_f;
+% r_f_all = r_f;
+% % the plots for 3 sessons separately
+% set(gcf,'Position',get(0,'ScreenSize'));
+% 
+% for i = 1: num_sessions
+%     s = (i-1) * 12 + 1;
+%     e = 12 * i;
+%     c_m = c_m_all(s:e,:);
+%     r_m = r_m_all(s:e,:);
+%     s = (i - 1) * 9 + 1;
+%     e = 9 * i;
+%     c_f = c_f_all(s:e,:);
+%     r_f = r_f_all(s:e,:);
+%     ax1 = subplot(num_sessions,2,2*i-1);
+%     c_y_mean = mean(c_m);
+%     c_y_std = std(c_m)/sqrt(size(r_m,1));
+%     shadedErrorBar(0:0.1:60,c_y_mean,c_y_std, 'lineprops','b');hold on 
+%     c_o_mean = mean(c_f);
+%     c_o_std = std(c_f)/sqrt(size(r_f,1));
+%     shadedErrorBar(0:0.1:60,c_o_mean,c_o_std);hold on
+%     shadedErrorBar(0:0.1:60,CRF_stan,zeros(601,1),'lineprops','r'); 
+%     legend('young', 'old', 'standard');
+%     title(['cardiac response function',sess_names(i)]);
+% 
+%     ax2 = subplot(3,2,2*i);
+%     r_y_mean = mean(r_m);
+%     r_y_std = std(r_m)/sqrt(size(r_m,1));
+%     shadedErrorBar(0:0.1:60,r_y_mean,r_y_std,'lineprops','b');hold on 
+%     r_o_mean = mean(r_f);
+%     r_o_std = std(r_f)/sqrt(size(r_f,1));
+%     shadedErrorBar(0:0.1:60,r_o_mean,r_o_std); hold on
+%     r_m = r_m_all(s:e,:);
+%     s = (i - 1) * 9 + 1;
+%     e = 9 * i;
+%     c_f = c_f_all(s:e,:);
+%     r_f = r_f_all(s:e,:);    
+%     ax1 = subplot(3,4,4*i-3)    
+%     for j = 1:12
+%         plot(c_m(j,:));hold on;
+%     end
+%     plot(CRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),'CRF in young group'])
+% 
+%     ax2 = subplot(3,4,4*i-2)    
+%     for j = 1:12
+%         plot(r_m(j,:));hold on;
+%     end
+%     plot(RRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),' RRF in young group'])
+% 
+% 
+%     ax3 = subplot(3,4,4*i-1)    
+%     for j = 1:9
+%         plot(c_f(j,:));hold on;
+%     end
+%     plot(CRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),'CRF in old group'])
+% 
+%     ax4 = subplot(3,4,4*i)    
+%     for j = 1:9
+%         plot(r_f(j,:));hold on;
+%     end
+%     plot(RRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),'RRF in old group'])
+% end
+% saveas(gcf,'jpgs/AllLine.jpg')   shadedErrorBar(0:0.1:60,RRF_stan,zeros(601,1),'lineprops','r');
+%     legend('young', 'old', 'standard');
+%     title(['respiration response function',sess_names(i)]); 
+% 
+% end
+% saveas(gcf,'jpgs/ShadedError.jpg');
+% clear gcf
+% set(gcf,'Position',get(0,'ScreenSize'));
+% for i = 1:num_sessions
+%     s = (i-1) * 12 + 1;
+%     e = 12 * i;
+%     c_m = c_m_all(s:e,:);
+%     r_m = r_m_all(s:e,:);
+%     s = (i - 1) * 9 + 1;
+%     e = 9 * i;
+%     c_f = c_f_all(s:e,:);
+%     r_f = r_f_all(s:e,:);    
+%     ax1 = subplot(3,4,4*i-3)    
+%     for j = 1:12
+%         plot(c_m(j,:));hold on;
+%     end
+%     plot(CRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),'CRF in young group'])
+% 
+%     ax2 = subplot(3,4,4*i-2)    
+%     for j = 1:12
+%         plot(r_m(j,:));hold on;
+%     end
+%     plot(RRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),' RRF in young group'])
+% 
+% 
+%     ax3 = subplot(3,4,4*i-1)    
+%     for j = 1:9
+%         plot(c_f(j,:));hold on;
+%     end
+%     plot(CRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),'CRF in old group'])
+% 
+%     ax4 = subplot(3,4,4*i)    
+%     for j = 1:9
+%         plot(r_f(j,:));hold on;
+%     end
+%     plot(RRF_stan,'LineWidth',1.5,'Color','k');
+%     title([sess_names(i),'RRF in old group'])
+% end
+% saveas(gcf,'jpgs/AllLine.jpg')
 %% two pairs test of the correlation and curve features
 names = {'prf_r' ,'c1_amplitude', 'c2_amplitude', 'time_to_c1',...
     'time_to_c2','c1_width', 'c2_width', 'cardic_shape', 'r1_amplitude',...
@@ -166,6 +202,22 @@ means(3, :) = p;
 result_table = array2table(means,'RowNames',{'male','female','p-val'},'VariableNames',names);
 pair = result_table(:,find(p<0.05));
 save("result.mat");
+figure
+ax1 = subplot(2,2,1)
+histogram(categorical([data.gender]),'BarWidth',0.5);
+title("the distribution of gender");
+set(gca,'xticklabel',{'male','female'});
+
+ax2 = subplot(2,2,2);
+histogram(categorical([data.age]),'BarWidth',0.5);
+title("the distribution of age");
+set(gca,'xticklabel',{'22-25','26-30','31-35'});
+
+ax3 = subplot(2,2,[3,4])
+histogram([out_m.prf]);hold on;
+histogram([out_f.prf]);
+legend('male','female');
+title("the distribution of correlation of PRF(p_val = 0.01)");
 
 %% anova test 
 %check the correlation 
